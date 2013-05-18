@@ -9,4 +9,13 @@ class FastPencilQuiz
 
 	def find_sequences(word_list)
 	end
+
+	def questions_file_name()
+	end
+
+	def answers_file_name()
+	end
+
+	def determine_unique_sequences()
+	end
 end

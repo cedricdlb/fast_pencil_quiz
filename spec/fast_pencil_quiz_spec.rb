@@ -53,9 +53,48 @@ describe FastPencilQuiz do
 		
 			its(:keys) { subject.sort.should == @sequences }
 
-			(1...8).to_a.each do |i|
+			(0...8).to_a.each do |i|
 				context "when testing sequence " + i.to_s do 
 					specify { @fast_pencil_quiz.q_and_a_candidates[@sequences[i]].should == @containing_words[i] }
+				end
+			end
+
+			context "when #determine_unique_sequences is run" do
+				before do
+					#@unique_sequences = %w[carr give rots rows rrot rrow]
+					@unique_sequences = @sequences - %w[arro food]
+					@unique_words = @containing_words - [%w[arrows carrots], %w[food food]]
+					@questions_file_name = "path to questions_file"
+					@answers_file_name   = "path to answers_file"
+					@mock_file_questions = mock(File)
+					@mock_file_answers   = mock(File)
+					@fast_pencil_quiz.should_receive(:questions_file_name).and_return(@questions_file_name)
+					@fast_pencil_quiz.should_receive(:answers_file_name).and_return(@answers_file_name)
+					File.should_receive(:open).with(@questions_file_name, "w").and_yield(@mock_file_questions)
+					File.should_receive(:open).with(@answers_file_name, "w").and_yield(@mock_file_answers)
+					@number_of_unique_sequences = @fast_pencil_quiz.determine_unique_sequences()
+				end
+	
+				specify { @number_of_unique_sequences.should == @unique_sequences.size }
+
+				it "should write out sequences found in only one word" do
+					(0...5).to_a.each do |i|
+						@mock_file_questions.should_receive(:puts).once().with(@unique_sequences[i])
+					end
+				end
+
+				it "should only write enough times to include all the questions" do
+					@mock_file_questions.should_receive(:puts).exactly(5).times
+				end
+
+				it "should write out words corresponding to unique sequences" do
+					(0...5).to_a.each do |i|
+						@mock_file_answers.should_receive(:puts).once().with(@unique_words[i])
+					end
+				end
+
+				it "should only write enough times to include all the answers" do
+					@mock_file_answers.should_receive(:puts).exactly(5).times
 				end
 			end
 		end
