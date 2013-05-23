@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
-require_relative '../fast_pencil_quiz.rb'
+#require_relative '../fast_pencil_quiz.rb'
+require_relative File.join('..', 'lib', 'fast_pencil_quiz')
 
 describe FastPencilQuiz do
 	before(:each) do
@@ -26,8 +27,8 @@ describe FastPencilQuiz do
 			File.should_receive(:file?).with(@dictionary_file_name).and_return(true)
 			File.should_receive(:readable?).with(@dictionary_file_name).and_return(true)
 			@fast_pencil_quiz.should_receive(:dictionary_file_name).any_number_of_times.and_return(@dictionary_file_name)
-			@fast_pencil_quiz.should_receive(:questions_file_name).and_return(@questions_file_name)
-			@fast_pencil_quiz.should_receive(:answers_file_name).and_return(@answers_file_name)
+			@fast_pencil_quiz.should_receive(:questions_file_name).any_number_of_times.and_return(@questions_file_name)
+			@fast_pencil_quiz.should_receive(:answers_file_name).any_number_of_times.and_return(@answers_file_name)
 			File.should_receive(:open).with(@dictionary_file_name, "r").and_return(@dictionary_mock_file)
 			File.should_receive(:open).with(@questions_file_name, "w").and_return(@questions_mock_file)
 			File.should_receive(:open).with(@answers_file_name, "w").and_return(@answers_mock_file)

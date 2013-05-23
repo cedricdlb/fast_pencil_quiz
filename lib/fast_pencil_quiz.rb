@@ -41,6 +41,7 @@ class FastPencilQuiz
 	end
 
 	def determine_unique_sequences
+		puts "Will write output to files #{questions_file_name} and #{answers_file_name}"
 		q_and_a_candidates.each do |sequence, word_list|
 			if 1 == word_list.length
 				questions_file.puts(sequence)
@@ -63,6 +64,7 @@ class FastPencilQuiz
 
 	def dictionary_file_name
 		@dictionary_file_name ||= ARGV.shift
+		puts "input file is #{dictionary_file_name}"
 		@dictionary_file_name
 	end
 
