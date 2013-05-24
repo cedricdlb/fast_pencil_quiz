@@ -1,5 +1,4 @@
 #!/usr/bin/ruby
-#require_relative '../fast_pencil_quiz.rb'
 require_relative File.join('..', 'lib', 'fast_pencil_quiz')
 
 describe FastPencilQuiz do
@@ -8,10 +7,46 @@ describe FastPencilQuiz do
 		subject { @fast_pencil_quiz }
 	end
 
-	context "when #find_sequences has not yet been run" do
+	context "when not yet #run" do
 		subject { @fast_pencil_quiz.q_and_a_candidates }
 		it { should be_a Hash }
 		it { should be_empty }
+	end
+
+	context "when #run with bad input, should report an error" do
+		it "when no input file is given" do
+			@fast_pencil_quiz.should_receive(:dictionary_file_name).any_number_of_times.and_return(nil)
+			@fast_pencil_quiz.should_receive(:record_bad_input).with(FastPencilQuiz::FILE_NOT_SPECIFIED).and_return(false)
+			@fast_pencil_quiz.run
+		end
+
+		context "when input file is given" do
+			before(:each) do
+				@dictionary_file_name = "foo"
+				ARGV.insert(0, @dictionary_file_name)
+			end
+
+			it "but it does not exist" do
+				File.should_receive(:exists?).with(@dictionary_file_name).and_return(false)
+				@fast_pencil_quiz.should_receive(:record_bad_input).with(FastPencilQuiz::FILE_NOT_EXISTANT).and_return(false)
+				@fast_pencil_quiz.run
+			end
+
+			it "but it is not a proper file" do
+				File.should_receive(:exists?).with(@dictionary_file_name).and_return(true)
+				File.should_receive(:file?).with(@dictionary_file_name).and_return(false)
+				@fast_pencil_quiz.should_receive(:record_bad_input).with(FastPencilQuiz::FILE_NOT_PROPER).and_return(false)
+				@fast_pencil_quiz.run
+			end
+
+			it "but it is not readable" do
+				File.should_receive(:exists?).with(@dictionary_file_name).and_return(true)
+				File.should_receive(:file?).with(@dictionary_file_name).and_return(true)
+				File.should_receive(:readable?).with(@dictionary_file_name).and_return(false)
+				@fast_pencil_quiz.should_receive(:record_bad_input).with(FastPencilQuiz::FILE_NOT_READABLE).and_return(false)
+				@fast_pencil_quiz.run
+			end
+		end
 	end
 
 	context "when #run" do
@@ -19,16 +54,13 @@ describe FastPencilQuiz do
 			@dictionary_file_name = "dictionary_file.txt"
 			@questions_file_name = "./dictionary_file.questions.txt"
 			@answers_file_name   = "./dictionary_file.answers.txt"
-			ARGV << @dictionary_file_name
+			ARGV.insert(0, @dictionary_file_name)
 			@dictionary_mock_file = mock(File)
 			@questions_mock_file = mock(File)
 			@answers_mock_file   = mock(File)
 			File.should_receive(:exists?).with(@dictionary_file_name).and_return(true)
 			File.should_receive(:file?).with(@dictionary_file_name).and_return(true)
 			File.should_receive(:readable?).with(@dictionary_file_name).and_return(true)
-			@fast_pencil_quiz.should_receive(:dictionary_file_name).any_number_of_times.and_return(@dictionary_file_name)
-			@fast_pencil_quiz.should_receive(:questions_file_name).any_number_of_times.and_return(@questions_file_name)
-			@fast_pencil_quiz.should_receive(:answers_file_name).any_number_of_times.and_return(@answers_file_name)
 			File.should_receive(:open).with(@dictionary_file_name, "r").and_return(@dictionary_mock_file)
 			File.should_receive(:open).with(@questions_file_name, "w").and_return(@questions_mock_file)
 			File.should_receive(:open).with(@answers_file_name, "w").and_return(@answers_mock_file)

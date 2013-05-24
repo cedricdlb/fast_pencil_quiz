@@ -2,7 +2,7 @@
 
 class FastPencilQuiz
 	attr_accessor :q_and_a_candidates
-	attr_accessor :dictionary_file_name, :questions_file_name, :answers_file_name
+	attr_writer   :dictionary_file_name, :questions_file_name, :answers_file_name
 	attr_accessor :dictionary_file,      :questions_file,      :answers_file
 
 	def initialize
@@ -17,17 +17,38 @@ class FastPencilQuiz
 		end
 	end
 
+	FILE_NOT_SPECIFIED = 1
+	FILE_NOT_EXISTANT  = 2
+	FILE_NOT_PROPER    = 3
+	FILE_NOT_READABLE  = 4
+
 	def process_command_line
 		were_inputs_ok = true
-		unless File.exists?(dictionary_file_name) && File.file?(dictionary_file_name) && File.readable?(dictionary_file_name)
-			puts "FAILURE: dictionary_file_name #{dictionary_file_name} does not exist, is not a proper file, or is not readable..."
-			were_inputs_ok = false
-		end
-		
+		were_inputs_ok = record_bad_input(FILE_NOT_SPECIFIED) unless dictionary_file_name
+		were_inputs_ok = record_bad_input(FILE_NOT_EXISTANT) if were_inputs_ok && !File.exists?(dictionary_file_name)
+		were_inputs_ok = record_bad_input(FILE_NOT_PROPER)   if were_inputs_ok && !File.file?(dictionary_file_name)
+		were_inputs_ok = record_bad_input(FILE_NOT_READABLE) if were_inputs_ok && !File.readable?(dictionary_file_name)
 		were_inputs_ok
 	end
 
+	def record_bad_input(message_type)
+		puts case message_type
+			 when FILE_NOT_SPECIFIED
+				 "FAILURE: input file was not specified.  Please invoke with a path to a file containing one word per line"
+			 when FILE_NOT_EXISTANT
+				 "FAILURE: input file #{dictionary_file_name} does not exist"
+			 when FILE_NOT_PROPER
+				 "FAILURE: input file #{dictionary_file_name} is not a proper file"
+			 when FILE_NOT_READABLE
+				 "FAILURE: input file #{dictionary_file_name} is not readable"
+			 else
+				 "unknown error type"
+			 end
+		false
+	end
+
 	def find_sequences
+		output_in_run_mode("input file is #{@dictionary_file_name}")
 		@dictionary_file.each do |word|
 			scan_limit = word.length - 4
 			if scan_limit >= 0
@@ -41,13 +62,17 @@ class FastPencilQuiz
 	end
 
 	def determine_unique_sequences
-		puts "Will write output to files #{questions_file_name} and #{answers_file_name}"
+		output_in_run_mode("Will write output to files #{questions_file_name} and #{answers_file_name}")
 		q_and_a_candidates.each do |sequence, word_list|
 			if 1 == word_list.length
 				questions_file.puts(sequence)
 				answers_file.puts(word_list[0])
 			end
 		end
+	end
+
+	def output_in_run_mode(message)
+		puts message if File.join('bin', 'fast_pencil_quiz.rb') == $PROGRAM_NAME
 	end
 
 	def open_files
@@ -64,7 +89,6 @@ class FastPencilQuiz
 
 	def dictionary_file_name
 		@dictionary_file_name ||= ARGV.shift
-		puts "input file is #{dictionary_file_name}"
 		@dictionary_file_name
 	end
 
